@@ -1,0 +1,28 @@
+{
+	"description": "Add bookmark to toolbar",
+	"manifest_version": 2,
+	"name": "BookTool",
+	"version": "1.0",
+
+	"background": {
+		"scripts": ["background.js"]
+	},
+
+	"content_scripts": [
+		{
+			"matches": ["<all_urls>"],
+			"js": ["content.js"]
+		}
+	],
+
+	"options_ui": {
+		"page": "settings/settings.html"
+	},
+
+	"browser_action": {
+		"default_icon": {
+			"16": "icons/ico16.png",
+			"32": "icons/ico32.png"
+		}
+	}
+}
