@@ -1,1 +1,5 @@
-console.log('from settings.js');
+// @ts-nocheck
+
+document.querySelector('#exClearId').addEventListener('click', e => {
+	browser.runtime.sendMessage({ removeUrl: true });
+});
