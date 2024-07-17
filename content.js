@@ -1,3 +1,17 @@
-async function run() {}
+// @ts-nocheck
+'use strict';
 
-run();
+browser.runtime.onMessage.addListener(msg => {
+	if (msg.log) {
+		console.log(msg.log);
+	}
+});
+
+console.log('from content');
+
+// "content_scripts": [
+// 	{
+// 		"matches": ["<all_urls>"],
+// 		"js": ["content.js"]
+// 	}
+// ],

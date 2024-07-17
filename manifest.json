@@ -8,17 +8,6 @@
 		"scripts": ["background.js"]
 	},
 
-	"content_scripts": [
-		{
-			"matches": ["<all_urls>"],
-			"js": ["content.js"]
-		}
-	],
-
-	"options_ui": {
-		"page": "settings/settings.html"
-	},
-
 	"browser_action": {
 		"default_icon": {
 			"16": "icons/ico16.png",
@@ -30,5 +19,7 @@
 		"gecko": {
 			"id": "86darv@gmail.com"
 		}
-	}
+	},
+
+	"permissions": ["menus"]
 }

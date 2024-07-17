@@ -5,8 +5,18 @@
 		<link rel="stylesheet" href="/settings/settings.css" />
 	</head>
 	<body>
-		<div class="title">HI</div>
-		<button id="exClearId">Clear</button>
+		<form id="exFormId">
+			<label id="exLabelId" for="exInputId">Enter url</label>
+			<input
+				id="exInputId"
+				name="urlName"
+				type="text"
+				placeholder="https://example.com or example.com"
+			/>
+			<button id="exButtonId" type="submit">Save</button>
+			<button id="exResetId" type="button">Reset</button>
+		</form>
+
 		<script src="/settings/settings.js"></script>
 	</body>
 </html>

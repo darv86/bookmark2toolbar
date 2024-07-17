@@ -1,18 +1,16 @@
 // @ts-nocheck
+'use strict';
 
-// browser.runtime.openOptionsPage();
-
-function sanitizeUrl(str) {
-	if (str.includes('www.')) str = str.replace('www.', '');
-	if (str.startsWith('http')) return new URL(str);
-	else return new URL('https://' + str);
-}
+document.querySelector('#exResetId').addEventListener('click', e => {
+	browser.runtime.sendMessage({ resetUrl: true });
+	document.querySelector('#exLabelId').textContent = 'Enter url';
+});
 
 document.querySelector('#exFormId').addEventListener('submit', e => {
 	e.preventDefault();
 	const input = document.querySelector('#exInputId');
 	const url = sanitizeUrl(input.value);
-	localStorage.setItem('url', url);
+	localStorage.setItem('exUrl', url);
 	input.value = '';
 	document.querySelector('#exLabelId').textContent = 'Done!';
 	browser.browserAction.setIcon({
@@ -23,7 +21,8 @@ document.querySelector('#exFormId').addEventListener('submit', e => {
 	});
 });
 
-document.querySelector('#exResetId').addEventListener('click', e => {
-	browser.runtime.sendMessage({ removeUrl: true });
-	document.querySelector('#exLabelId').textContent = 'Enter url';
-});
+function sanitizeUrl(str) {
+	if (str.includes('www.')) str = str.replace('www.', '');
+	if (str.startsWith('http')) return new URL(str);
+	return new URL('https://' + str);
+}
