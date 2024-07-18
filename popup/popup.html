@@ -5,12 +5,19 @@
 		<link rel="stylesheet" href="/popup/popup.css" />
 	</head>
 
-	<body id="exBodyId">
-		<form id="exFormId">
-			<label id="exLabelId" for="exInputId">Enter url</label>
-			<input id="exInputId" name="urlName" type="text" placeholder="https://example.com" />
-			<button id="exButtonId" type="submit">Save</button>
-			<button id="exResetId" type="button">Reset</button>
+	<body class="body">
+		<form class="ex-form">
+			<label class="ex-label" for="exInputId">Enter url</label>
+			<input
+				class="ex-input"
+				id="exInputId"
+				name="url-name"
+				type="text"
+				placeholder="https://example.com"
+			/>
+			<button class="ex-btn-save ex-btn" type="submit">Save</button>
+			<div class="hr"></div>
+			<button class="ex-btn-reset ex-btn" type="button">Reset</button>
 		</form>
 
 		<script src="/popup/popup.js"></script>

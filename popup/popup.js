@@ -1,18 +1,21 @@
 // @ts-nocheck
 'use strict';
 
-document.querySelector('#exResetId').addEventListener('click', e => {
+const label = document.querySelector('.ex-label');
+const input = document.querySelector('.ex-input');
+
+document.querySelector('.ex-btn-reset').addEventListener('click', e => {
 	browser.runtime.sendMessage({ resetUrl: true });
-	document.querySelector('#exLabelId').textContent = 'Enter url';
+	label.textContent = 'Enter url';
+	input.value = '';
 });
 
-document.querySelector('#exFormId').addEventListener('submit', e => {
+document.querySelector('.ex-form').addEventListener('submit', e => {
 	e.preventDefault();
-	const input = document.querySelector('#exInputId');
 	const url = sanitizeUrl(input.value);
 	localStorage.setItem('exUrl', url);
 	input.value = '';
-	document.querySelector('#exLabelId').textContent = 'Done!';
+	label.textContent = 'Done!';
 	browser.browserAction.setIcon({
 		path: {
 			16: `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=16`,
