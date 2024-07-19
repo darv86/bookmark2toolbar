@@ -1,7 +1,7 @@
 {
-	"description": "Add your bookmark to the toolbar",
+	"description": "Add a bookmark to the toolbar",
 	"manifest_version": 2,
-	"name": "BookTool",
+	"name": "Bookmark2Toolbar",
 	"version": "1.0",
 
 	"background": {
