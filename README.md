@@ -1,4 +1,4 @@
-# booktool
+# Bookmark2Toolbar
 Add a bookmark to the toolbar
 
 You can bookmark your favorite site on your toolbar.
