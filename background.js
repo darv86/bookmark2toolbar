@@ -4,6 +4,15 @@
 browser.runtime.onInstalled.addListener(details => {
 	localStorage.removeItem('exUrl');
 	browser.menus.create({
+		id: 'exAddUrl',
+		title: 'Add current page',
+		contexts: ['browser_action'],
+		icons: {
+			16: 'icons/add16.png',
+			32: 'icons/add32.png',
+		},
+	});
+	browser.menus.create({
 		id: 'exChangeUrl',
 		title: 'Change url',
 		contexts: ['browser_action'],
@@ -23,16 +32,22 @@ browser.runtime.onInstalled.addListener(details => {
 	});
 });
 
-browser.runtime.onMessage.addListener(msg => msg.resetUrl && resetUrl());
-
-browser.browserAction.onClicked.addListener(e => {
-	if (localStorage.getItem('exUrl')) browser.tabs.create({ url: localStorage.getItem('exUrl') });
-	else openPopup();
-	logger({ data: e });
+browser.runtime.onMessage.addListener(msg => {
+	if (msg.addUrl) addUrl(msg.addUrl);
+	if (msg.resetUrl) resetUrl();
 });
 
-browser.menus.onClicked.addListener(info => {
+browser.browserAction.onClicked.addListener(tabInfo => {
+	if (localStorage.getItem('exUrl')) browser.tabs.create({ url: localStorage.getItem('exUrl') });
+	else openPopup();
+});
+
+browser.menus.onClicked.addListener((clickInfo, tabInfo) => {
 	const menuItem = {
+		exAddUrl() {
+			resetUrl();
+			addUrl(tabInfo.url);
+		},
 		exChangeUrl() {
 			resetUrl();
 			openPopup();
@@ -41,9 +56,20 @@ browser.menus.onClicked.addListener(info => {
 			resetUrl();
 		},
 	};
-	const action = info.menuItemId;
+	const action = clickInfo.menuItemId;
 	menuItem[action]();
 });
+
+function addUrl(url) {
+	const urlObj = sanitizeUrl(url);
+	localStorage.setItem('exUrl', urlObj);
+	browser.browserAction.setIcon({
+		path: {
+			16: `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=16`,
+			32: `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=32`,
+		},
+	});
+}
 
 function resetUrl() {
 	localStorage.removeItem('exUrl');
@@ -67,4 +93,10 @@ function logger(data) {
 				log: data,
 			});
 		});
+}
+
+function sanitizeUrl(str) {
+	if (str.includes('www.')) str = str.replace('www.', '');
+	if (str.startsWith('http')) return new URL(str);
+	return new URL('https://' + str);
 }
