@@ -65,8 +65,8 @@ function addUrl(url) {
 	localStorage.setItem('exUrl', urlObj);
 	browser.browserAction.setIcon({
 		path: {
-			16: `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=16`,
-			32: `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=32`,
+			16: `https://www.google.com/s2/favicons?domain=${urlObj}&sz=16`,
+			32: `https://www.google.com/s2/favicons?domain=${urlObj}&sz=32`,
 		},
 	});
 }
