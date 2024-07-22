@@ -61,7 +61,7 @@
 	color: black;
 	font-family: inherit;
 	&:active {
-		scale: 0.98;
+		scale: 0.96;
 	}
 }
 

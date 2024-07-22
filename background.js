@@ -1,8 +1,10 @@
 // @ts-nocheck
 'use strict';
 
+const extensionId = browser.runtime.id;
+
 browser.runtime.onInstalled.addListener(details => {
-	localStorage.removeItem('exUrl');
+	localStorage.removeItem(extensionId);
 	browser.menus.create({
 		id: 'exAddUrl',
 		title: 'Add current page',
@@ -38,7 +40,8 @@ browser.runtime.onMessage.addListener(msg => {
 });
 
 browser.browserAction.onClicked.addListener(tabInfo => {
-	if (localStorage.getItem('exUrl')) browser.tabs.create({ url: localStorage.getItem('exUrl') });
+	if (localStorage.getItem(extensionId))
+		browser.tabs.create({ url: localStorage.getItem(extensionId) });
 	else openPopup();
 });
 
@@ -62,17 +65,17 @@ browser.menus.onClicked.addListener((clickInfo, tabInfo) => {
 
 function addUrl(url) {
 	const urlObj = sanitizeUrl(url);
-	localStorage.setItem('exUrl', urlObj);
+	localStorage.setItem(extensionId, urlObj);
 	browser.browserAction.setIcon({
 		path: {
-			16: `https://www.google.com/s2/favicons?domain=${urlObj}&sz=16`,
-			32: `https://www.google.com/s2/favicons?domain=${urlObj}&sz=32`,
+			16: `https://www.google.com/s2/favicons?domain=https://${urlObj.hostname}&sz=16`,
+			32: `https://www.google.com/s2/favicons?domain=https://${urlObj.hostname}&sz=32`,
 		},
 	});
 }
 
 function resetUrl() {
-	localStorage.removeItem('exUrl');
+	localStorage.removeItem(extensionId);
 	browser.browserAction.setIcon({ path: { 16: '/icons/ico16.png', 32: '/icons/ico32.png' } });
 }
 
