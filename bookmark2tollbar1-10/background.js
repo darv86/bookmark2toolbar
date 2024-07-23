@@ -3,36 +3,48 @@
 
 const extensionId = browser.runtime.id;
 
-browser.runtime.onInstalled.addListener(details => {
-	localStorage.removeItem(extensionId);
-	browser.menus.create({
-		id: 'exAddUrl',
-		title: 'Add current page',
-		contexts: ['browser_action'],
-		icons: {
-			16: 'icons/add16.png',
-			32: 'icons/add32.png',
+if (localStorage.getItem(extensionId)) {
+	browser.browserAction.setIcon({
+		path: {
+			16: `https://www.google.com/s2/favicons?domain=https://${
+				new URL(localStorage.getItem(extensionId)).hostname
+			}&sz=16`,
+			32: `https://www.google.com/s2/favicons?domain=https://${
+				new URL(localStorage.getItem(extensionId)).hostname
+			}&sz=32`,
 		},
 	});
-	browser.menus.create({
-		id: 'exChangeUrl',
-		title: 'Change url',
-		contexts: ['browser_action'],
-		icons: {
-			16: 'icons/change16.png',
-			32: 'icons/change32.png',
-		},
-	});
-	browser.menus.create({
-		id: 'exResetUrl',
-		title: 'Reset url',
-		contexts: ['browser_action'],
-		icons: {
-			16: 'icons/reset16.png',
-			32: 'icons/reset32.png',
-		},
-	});
+}
+
+browser.menus.create({
+	id: 'exAddUrl',
+	title: 'Add current page',
+	contexts: ['browser_action'],
+	icons: {
+		16: 'icons/add16.png',
+		32: 'icons/add32.png',
+	},
 });
+browser.menus.create({
+	id: 'exChangeUrl',
+	title: 'Change url',
+	contexts: ['browser_action'],
+	icons: {
+		16: 'icons/change16.png',
+		32: 'icons/change32.png',
+	},
+});
+browser.menus.create({
+	id: 'exResetUrl',
+	title: 'Reset url',
+	contexts: ['browser_action'],
+	icons: {
+		16: 'icons/reset16.png',
+		32: 'icons/reset32.png',
+	},
+});
+
+browser.runtime.onInstalled.addListener(() => resetUrl());
 
 browser.runtime.onMessage.addListener(msg => {
 	if (msg.addUrl) addUrl(msg.addUrl);
@@ -68,8 +80,12 @@ function addUrl(url) {
 	localStorage.setItem(extensionId, urlObj);
 	browser.browserAction.setIcon({
 		path: {
-			16: `https://www.google.com/s2/favicons?domain=https://${urlObj.hostname}&sz=16`,
-			32: `https://www.google.com/s2/favicons?domain=https://${urlObj.hostname}&sz=32`,
+			16: `https://www.google.com/s2/favicons?domain=https://${
+				new URL(localStorage.getItem(extensionId)).hostname
+			}&sz=16`,
+			32: `https://www.google.com/s2/favicons?domain=https://${
+				new URL(localStorage.getItem(extensionId)).hostname
+			}&sz=32`,
 		},
 	});
 }
