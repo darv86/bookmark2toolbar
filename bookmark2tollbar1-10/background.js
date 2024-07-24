@@ -44,7 +44,8 @@ browser.menus.create({
 	},
 });
 
-browser.runtime.onInstalled.addListener(() => resetUrl());
+browser.runtime.onInstalled.addListener(resetUrl);
+browser.runtime.onInstalled.removeListener(resetUrl);
 
 browser.runtime.onMessage.addListener(msg => {
 	if (msg.addUrl) addUrl(msg.addUrl);
