@@ -13,6 +13,15 @@ browser.menus.create({
 	},
 });
 browser.menus.create({
+	id: 'exRemoveUrl',
+	title: 'Remove current page',
+	contexts: ['browser_action'],
+	icons: {
+		16: 'icons/remove16.png',
+		32: 'icons/remove32.png',
+	},
+});
+browser.menus.create({
 	id: 'exChangeUrl',
 	title: 'Change url',
 	contexts: ['browser_action'],
@@ -52,6 +61,9 @@ browser.menus.onClicked.addListener((clickInfo, tabInfo) => {
 		exAddUrl() {
 			addUrl(tabInfo.url);
 		},
+		exRemoveUrl() {
+			removeUrl(tabInfo.url);
+		},
 		exChangeUrl() {
 			openPopup();
 		},
@@ -64,18 +76,17 @@ browser.menus.onClicked.addListener((clickInfo, tabInfo) => {
 });
 
 function setCurrentIcon() {
-	const group = localStorage.getItem(extensionId).includes(';');
-	const faviconUrl = group
-		? 'icons/group'
-		: `https://www.google.com/s2/favicons?domain=https://${
-				new URL(localStorage.getItem(extensionId)).hostname
-		  }&sz=`;
-	browser.browserAction.setIcon({
-		path: {
-			16: faviconUrl + 16 + (group ? '.png' : ''),
-			32: faviconUrl + 32 + (group ? '.png' : ''),
-		},
-	});
+	const urls = localStorage.getItem(extensionId);
+	let path = null;
+	if (!urls) {
+		path = { 16: '/icons/ico16.png', 32: '/icons/ico32.png' };
+	} else if (urls.includes(';')) {
+		path = { 16: '/icons/group16.png', 32: '/icons/group32.png' };
+	} else {
+		const icon = `https://www.google.com/s2/favicons?domain=https://${new URL(urls).hostname}&sz=`;
+		path = { 16: icon + 16, 32: icon + 32 };
+	}
+	browser.browserAction.setIcon({ path });
 }
 
 function addUrl(url) {
@@ -92,9 +103,24 @@ function addUrl(url) {
 	setCurrentIcon();
 }
 
+function removeUrl(url) {
+	const sanitizedUrl = sanitizeUrl(url).toString();
+	const oldUrls = localStorage.getItem(extensionId);
+	if (!oldUrls) return;
+	const oldUrlsArr = oldUrls.split(';');
+	if (!oldUrlsArr.includes(sanitizedUrl)) return;
+	const newUrls = oldUrlsArr.filter(url => url !== sanitizedUrl).join(';');
+	if (!newUrls) {
+		resetUrl();
+		return;
+	}
+	localStorage.setItem(extensionId, newUrls);
+	setCurrentIcon();
+}
+
 function resetUrl() {
 	localStorage.removeItem(extensionId);
-	browser.browserAction.setIcon({ path: { 16: '/icons/ico16.png', 32: '/icons/ico32.png' } });
+	setCurrentIcon();
 }
 
 function openPopup() {
