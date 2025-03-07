@@ -14,3 +14,5 @@ OR
 (5) The next click on the icon will open your favorite site in a new tab.  
 
 Enjoy it ;)
+
+2ed2b0677cc74ca3a0ee78ce6b1edcf9
