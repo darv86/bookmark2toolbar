@@ -1,10 +1,14 @@
 // @ts-nocheck
 'use strict';
 
+if (typeof browser === 'undefined') {
+	var browser = chrome;
+}
+
 const label = document.querySelector('.ex-label');
 const input = document.querySelector('.ex-input');
 
-document.querySelector('.ex-form').addEventListener('submit', e => {
+document.querySelector('.ex-form').addEventListener('submit', (e) => {
 	e.preventDefault();
 	const url = input.value;
 	browser.runtime.sendMessage({ addUrl: url });
@@ -12,7 +16,7 @@ document.querySelector('.ex-form').addEventListener('submit', e => {
 	label.textContent = 'Done!';
 });
 
-document.querySelector('.ex-btn-reset').addEventListener('click', e => {
+document.querySelector('.ex-btn-reset').addEventListener('click', (e) => {
 	browser.runtime.sendMessage({ resetUrl: true });
 	label.textContent = 'Enter url';
 	input.value = '';
