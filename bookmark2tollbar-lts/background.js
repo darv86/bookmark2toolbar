@@ -1,72 +1,65 @@
 // @ts-nocheck
 'use strict';
 
+if (typeof browser === 'undefined') {
+	var browser = chrome;
+}
+
 const extensionId = browser.runtime.id;
+console.log(extensionId, 'woo');
 
-browser.menus.create({
+browser.contextMenus.create({
 	id: 'exAddUrl',
-	title: 'Add current page',
-	contexts: ['browser_action'],
-	icons: {
-		16: 'icons/add16.png',
-		32: 'icons/add32.png',
-	},
+	title: '➕ Add current page',
+	contexts: ['action'],
 });
-browser.menus.create({
+browser.contextMenus.create({
 	id: 'exRemoveUrl',
-	title: 'Remove current page',
-	contexts: ['browser_action'],
-	icons: {
-		16: 'icons/remove16.png',
-		32: 'icons/remove32.png',
-	},
+	title: '➖ Remove current page',
+	contexts: ['action'],
 });
-browser.menus.create({
+browser.contextMenus.create({
 	id: 'exChangeUrl',
-	title: 'Change url',
-	contexts: ['browser_action'],
-	icons: {
-		16: 'icons/change16.png',
-		32: 'icons/change32.png',
-	},
+	title: '🛠️ Change url',
+	contexts: ['action'],
 });
-browser.menus.create({
+browser.contextMenus.create({
 	id: 'exResetUrl',
-	title: 'Reset url',
-	contexts: ['browser_action'],
-	icons: {
-		16: 'icons/reset16.png',
-		32: 'icons/reset32.png',
-	},
+	title: '🗑️ Reset url',
+	contexts: ['action'],
 });
 
-if (localStorage.getItem(extensionId)) setCurrentIcon();
+const storage = browser.storage.local;
 
-browser.runtime.onInstalled.addListener(resetUrl);
-browser.runtime.onInstalled.removeListener(resetUrl);
+storage.get(extensionId).then((elem) => setCurrentIcon());
 
-browser.runtime.onMessage.addListener(msg => {
-	if (msg.addUrl) addUrl(msg.addUrl);
-	if (msg.resetUrl) resetUrl();
-});
+// if (localStorage.getItem(extensionId)) setCurrentIcon();
 
-browser.browserAction.onClicked.addListener(tabInfo => {
-	const urls = localStorage.getItem(extensionId);
-	if (urls) for (const url of urls.split(';')) browser.tabs.create({ url });
-	else openPopup();
-});
+// browser.runtime.onInstalled.addListener(resetUrl);
+// browser.runtime.onInstalled.removeListener(resetUrl);
 
-browser.menus.onClicked.addListener((clickInfo, tabInfo) => {
+// browser.runtime.onMessage.addListener((msg) => {
+// 	if (msg.addUrl) addUrl(msg.addUrl);
+// 	if (msg.resetUrl) resetUrl();
+// });
+
+// method browserAction (v2) -> action (v3)
+// browser.action.onClicked.addListener((tabInfo) => {
+// 	const urls = localStorage.getItem(extensionId);
+// 	if (urls) for (const url of urls.split(';')) browser.tabs.create({ url }); // 	else openPopup();
+// });
+
+browser.contextMenus.onClicked.addListener((clickInfo, tabInfo) => {
 	const menuItem = {
 		exAddUrl() {
 			addUrl(tabInfo.url);
 		},
-		exRemoveUrl() {
-			removeUrl(tabInfo.url);
-		},
-		exChangeUrl() {
-			openPopup();
-		},
+		// exRemoveUrl() {
+		// 	removeUrl(tabInfo.url);
+		// },
+		// exChangeUrl() {
+		// 	openPopup();
+		// },
 		exResetUrl() {
 			resetUrl();
 		},
@@ -75,71 +68,77 @@ browser.menus.onClicked.addListener((clickInfo, tabInfo) => {
 	menuItem[action]();
 });
 
-function setCurrentIcon() {
-	const urls = localStorage.getItem(extensionId);
-	let path = null;
+async function setCurrentIcon() {
+	const urls = (await storage.get(extensionId))[extensionId];
 	if (!urls) {
-		path = { 16: '/icons/ico16.png', 32: '/icons/ico32.png' };
-	} else if (urls.includes(';')) {
-		path = { 16: '/icons/group16.png', 32: '/icons/group32.png' };
-	} else {
-		const icon = `https://www.google.com/s2/favicons?domain=https://${new URL(urls).hostname}&sz=`;
-		path = { 16: icon + 16, 32: icon + 32 };
+		const path = { 16: '/icons/ico16.png', 32: '/icons/ico32.png' };
+		browser.action.setIcon({ path });
+		return;
 	}
-	browser.browserAction.setIcon({ path });
+	if (urls.includes(';')) {
+		const path = { 16: '/icons/group16.png', 32: '/icons/group32.png' };
+		browser.action.setIcon({ path });
+		return;
+	}
+	const domain = new URL(urls).hostname;
+	const img16 = await fetchFavicon(domain);
+	const img32 = await fetchFavicon(domain, 32);
+	const imageData = { 16: img16, 32: img32 };
+	browser.action.setIcon({ imageData });
 }
 
-function addUrl(url) {
+async function addUrl(url) {
 	const sanitizedUrl = sanitizeUrl(url).toString();
-	const oldUrls = localStorage.getItem(extensionId) || sanitizedUrl;
+	const oldUrls =
+		(await storage.get(extensionId))[extensionId] || sanitizedUrl;
 	const newUrls = oldUrls.includes(sanitizedUrl)
 		? oldUrls
 				.split(';')
-				.filter(url => url !== sanitizedUrl)
+				.filter((url) => url !== sanitizedUrl)
 				.concat(sanitizedUrl)
 				.join(';')
 		: oldUrls.concat(';', sanitizedUrl);
-	localStorage.setItem(extensionId, newUrls);
+	await storage.set({ [extensionId]: newUrls });
 	setCurrentIcon();
 }
 
-function removeUrl(url) {
-	const sanitizedUrl = sanitizeUrl(url).toString();
-	const oldUrls = localStorage.getItem(extensionId);
-	if (!oldUrls) return;
-	const oldUrlsArr = oldUrls.split(';');
-	if (!oldUrlsArr.includes(sanitizedUrl)) return;
-	const newUrls = oldUrlsArr.filter(url => url !== sanitizedUrl).join(';');
-	if (!newUrls) {
-		resetUrl();
-		return;
-	}
-	localStorage.setItem(extensionId, newUrls);
-	setCurrentIcon();
+async function fetchFavicon(domain, size = 16) {
+	const service = `https://www.google.com/s2/favicons?domain=https://${domain}&sz=${size}`;
+	const resp = await fetch(service);
+	const blob = await resp.blob();
+	const bitmap = await createImageBitmap(blob);
+	const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+	const ctx = canvas.getContext('2d');
+	ctx.drawImage(bitmap, 0, 0);
+	const imageData = ctx.getImageData(0, 0, bitmap.width, bitmap.height);
+	return imageData;
 }
+
+// function removeUrl(url) {
+// 	const sanitizedUrl = sanitizeUrl(url).toString();
+// 	const oldUrls = localStorage.getItem(extensionId);
+// 	if (!oldUrls) return;
+// 	const oldUrlsArr = oldUrls.split(';');
+// 	if (!oldUrlsArr.includes(sanitizedUrl)) return;
+// 	const newUrls = oldUrlsArr.filter((url) => url !== sanitizedUrl).join(';');
+// 	if (!newUrls) {
+// 		resetUrl();
+// 		return;
+// 	}
+// 	localStorage.setItem(extensionId, newUrls);
+// 	setCurrentIcon();
+// }
 
 function resetUrl() {
-	localStorage.removeItem(extensionId);
+	storage.remove(extensionId);
 	setCurrentIcon();
+	console.log('removed');
 }
 
 function openPopup() {
-	browser.browserAction.setPopup({ popup: '/popup/popup.html' });
-	browser.browserAction.openPopup();
-	browser.browserAction.setPopup({ popup: '' });
-}
-
-function logger(data) {
-	browser.tabs
-		.query({
-			currentWindow: true,
-			active: true,
-		})
-		.then(openedTabs => {
-			browser.tabs.sendMessage(openedTabs[0].id, {
-				log: data,
-			});
-		});
+	browser.action.setPopup({ popup: '/popup/popup.html' });
+	browser.action.openPopup();
+	browser.action.setPopup({ popup: '' });
 }
 
 function sanitizeUrl(str) {
@@ -147,3 +146,16 @@ function sanitizeUrl(str) {
 	if (str.startsWith('http')) return new URL(str);
 	return new URL('https://' + str);
 }
+
+// function logger(data) {
+// 	browser.tabs
+// 		.query({
+// 			currentWindow: true,
+// 			active: true,
+// 		})
+// 		.then((openedTabs) => {
+// 			browser.tabs.sendMessage(openedTabs[0].id, {
+// 				log: data,
+// 			});
+// 		});
+// }
