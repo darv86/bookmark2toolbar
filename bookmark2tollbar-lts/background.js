@@ -6,42 +6,39 @@ if (typeof browser === 'undefined') {
 }
 
 const extensionId = browser.runtime.id;
-console.log(extensionId, 'woo');
 
-browser.contextMenus.create({
-	id: 'exAddUrl',
-	title: '➕ Add current page',
-	contexts: ['action'],
-});
-browser.contextMenus.create({
-	id: 'exRemoveUrl',
-	title: '➖ Remove current page',
-	contexts: ['action'],
-});
-browser.contextMenus.create({
-	id: 'exChangeUrl',
-	title: '🛠️ Change url',
-	contexts: ['action'],
-});
-browser.contextMenus.create({
-	id: 'exResetUrl',
-	title: '🗑️ Reset url',
-	contexts: ['action'],
+browser.runtime.onInstalled.addListener(() => {
+	browser.contextMenus.create({
+		id: 'exAddUrl',
+		title: '➕ Add current page',
+		contexts: ['action'],
+	});
+	browser.contextMenus.create({
+		id: 'exRemoveUrl',
+		title: '➖ Remove current page',
+		contexts: ['action'],
+	});
+	browser.contextMenus.create({
+		id: 'exChangeUrl',
+		title: '🛠️ Change url',
+		contexts: ['action'],
+	});
+	browser.contextMenus.create({
+		id: 'exResetUrl',
+		title: '🗑️ Reset url',
+		contexts: ['action'],
+	});
 });
 
 const storage = browser.storage.local;
 
 storage.get(extensionId).then((elem) => setCurrentIcon());
 
-// browser.runtime.onInstalled.addListener(resetUrl);
-// browser.runtime.onInstalled.removeListener(resetUrl);
-
 browser.runtime.onMessage.addListener((msg) => {
 	if (msg.addUrl) addUrl(msg.addUrl);
 	if (msg.resetUrl) resetUrl();
 });
 
-// method browserAction (v2) -> action (v3)
 browser.action.onClicked.addListener(async (tabInfo) => {
 	const urls = (await storage.get(extensionId))[extensionId];
 	if (urls) for (const url of urls.split(';')) browser.tabs.create({ url });
@@ -144,16 +141,3 @@ function sanitizeUrl(str) {
 	if (str.startsWith('http')) return new URL(str);
 	return new URL('https://' + str);
 }
-
-// function logger(data) {
-// 	browser.tabs
-// 		.query({
-// 			currentWindow: true,
-// 			active: true,
-// 		})
-// 		.then((openedTabs) => {
-// 			browser.tabs.sendMessage(openedTabs[0].id, {
-// 				log: data,
-// 			});
-// 		});
-// }
