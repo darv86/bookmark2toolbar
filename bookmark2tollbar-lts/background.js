@@ -30,9 +30,13 @@ browser.runtime.onInstalled.addListener(() => {
 	});
 });
 
+browser.tabs.onUpdated.addListener((_, changeInfo) => {
+	if (changeInfo.status === 'complete') setCurrentIcon();
+});
+
 const storage = browser.storage.local;
 
-storage.get(extensionId).then((elem) => setCurrentIcon());
+storage.get(extensionId).then(() => setCurrentIcon());
 
 browser.runtime.onMessage.addListener((msg) => {
 	if (msg.addUrl) addUrl(msg.addUrl);
@@ -95,7 +99,7 @@ async function addUrl(url) {
 				.join(';')
 		: oldUrls.concat(';', sanitizedUrl);
 	await storage.set({ [extensionId]: newUrls });
-	setCurrentIcon();
+	await setCurrentIcon();
 }
 
 async function removeUrl(url) {
@@ -110,12 +114,12 @@ async function removeUrl(url) {
 		return;
 	}
 	await storage.set({ [extensionId]: newUrls });
-	setCurrentIcon();
+	await setCurrentIcon();
 }
 
-function resetUrl() {
-	storage.remove(extensionId);
-	setCurrentIcon();
+async function resetUrl() {
+	await storage.remove(extensionId);
+	await setCurrentIcon();
 }
 
 function openPopup() {
