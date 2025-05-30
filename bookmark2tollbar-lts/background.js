@@ -6,6 +6,9 @@ if (typeof browser === 'undefined') {
 }
 
 const extensionId = browser.runtime.id;
+const storage = browser.storage.local;
+
+storage.get(extensionId).then(async () => await setCurrentIcon());
 
 browser.runtime.onInstalled.addListener(() => {
 	browser.contextMenus.create({
@@ -30,13 +33,8 @@ browser.runtime.onInstalled.addListener(() => {
 	});
 });
 
-browser.tabs.onUpdated.addListener((_, changeInfo) => {
-	if (changeInfo.status === 'complete') setCurrentIcon();
-});
-
-const storage = browser.storage.local;
-
-storage.get(extensionId).then(() => setCurrentIcon());
+// to weak up the worker after a browser reload
+browser.tabs.onUpdated.addListener(() => {});
 
 browser.runtime.onMessage.addListener((msg) => {
 	if (msg.addUrl) addUrl(msg.addUrl);
@@ -68,25 +66,6 @@ browser.contextMenus.onClicked.addListener((clickInfo, tabInfo) => {
 	menuItem[action]();
 });
 
-async function setCurrentIcon() {
-	const urls = (await storage.get(extensionId))[extensionId];
-	if (!urls) {
-		const path = { 16: '/icons/ico16.png', 32: '/icons/ico32.png' };
-		browser.action.setIcon({ path });
-		return;
-	}
-	if (urls.includes(';')) {
-		const path = { 16: '/icons/group16.png', 32: '/icons/group32.png' };
-		browser.action.setIcon({ path });
-		return;
-	}
-	const domain = new URL(urls).hostname;
-	const img16 = await fetchFavicon(domain);
-	const img32 = await fetchFavicon(domain, 32);
-	const imageData = { 16: img16, 32: img32 };
-	browser.action.setIcon({ imageData });
-}
-
 async function addUrl(url) {
 	const sanitizedUrl = sanitizeUrl(url).toString();
 	const oldUrls =
@@ -110,7 +89,7 @@ async function removeUrl(url) {
 	if (!oldUrlsArr.includes(sanitizedUrl)) return;
 	const newUrls = oldUrlsArr.filter((url) => url !== sanitizedUrl).join(';');
 	if (!newUrls) {
-		resetUrl();
+		await resetUrl();
 		return;
 	}
 	await storage.set({ [extensionId]: newUrls });
@@ -118,7 +97,8 @@ async function removeUrl(url) {
 }
 
 async function resetUrl() {
-	await storage.remove(extensionId);
+	await storage.clear();
+	// await storage.remove(extensionId);
 	await setCurrentIcon();
 }
 
@@ -126,6 +106,32 @@ function openPopup() {
 	browser.action.setPopup({ popup: '/popup/popup.html' });
 	browser.action.openPopup();
 	browser.action.setPopup({ popup: '' });
+}
+
+async function setCurrentIcon() {
+	const urls = (await storage.get(extensionId))[extensionId];
+	if (!urls) {
+		const path = { 16: '/icons/ico16.png', 32: '/icons/ico32.png' };
+		browser.action.setIcon({ path });
+		return;
+	}
+	if (urls.includes(';')) {
+		const path = { 16: '/icons/group16.png', 32: '/icons/group32.png' };
+		browser.action.setIcon({ path });
+		return;
+	}
+	const domain = new URL(urls).hostname;
+	try {
+		const [img16, img32] = await Promise.all([
+			fetchFavicon(domain),
+			fetchFavicon(domain, 32),
+		]);
+		const imageData = { 16: img16, 32: img32 };
+		browser.action.setIcon({ imageData });
+	} catch (error) {
+		const path = { 16: '/icons/ico16.png', 32: '/icons/ico32.png' };
+		browser.action.setIcon({ path });
+	}
 }
 
 async function fetchFavicon(domain, size = 16) {
