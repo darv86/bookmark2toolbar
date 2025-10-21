@@ -11,7 +11,9 @@ OR
 (3) Add and save your favorite URL address;  
 
 (4) The yellow star icon will be replaced with the favicon of the added site;  
-(5) The next click on the icon will open your favorite site in a new tab.  
+(5) The next click on the icon will open your favorite site in a new tab.
+
+*** A Chrome version of this extension is also available. Simply change the branch of this repository to "chrome-v3" and download the extension. ***
 
 Enjoy it ;)
 
